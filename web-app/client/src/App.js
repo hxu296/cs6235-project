@@ -19,16 +19,22 @@ const Row = styled.div`
   width: 100%;
 `;
 
-const Canvas = styled.canvas`
-  border: 1px solid blue;
-  width: 50%;
-  height: 50%;
-`;
+const videoStyles = {
+  position: "fixed",
+  top: 0,
+  left: 0,
+  width: 640,
+  height: 480,
+  transform: "translate(-100%, -100%);", // Moves the video out of the viewport
+  PointerEvents: 'none',
+  visibility: 'hidden',
+};
 
 function App() {
   const [yourID, setYourID] = useState("");
   const [users, setUsers] = useState({});
   const [stream, setStream] = useState();
+  const [processedStream, setProcessedStream] = useState();
   const [receivingCall, setReceivingCall] = useState(false);
   const [caller, setCaller] = useState("");
   const [callerSignal, setCallerSignal] = useState();
@@ -39,6 +45,7 @@ function App() {
   const partnerVideo = useRef();
   const socket = useRef();
   const camera = useRef();
+  const userProcessedVideoRef = useRef();
 
   // Function to switch models based on FPS
   let lastFrameTime = Date.now(); // Time of the last frame for FPS calculation
@@ -76,6 +83,17 @@ function App() {
     });
   }, []);
 
+  // capture processed video stream from canvas
+  useEffect(() => {
+    let processedStream;
+    if (userStreamCanvasRef.current) {
+      processedStream = userStreamCanvasRef.current.captureStream();
+      setProcessedStream(processedStream);
+    }
+    if (userProcessedVideoRef.current) {
+      userProcessedVideoRef.current.srcObject = processedStream;
+    }
+  }, [userStreamCanvasRef]);
 
   // Update FPS and handle model switching
   const updateFPS = () => {
@@ -90,6 +108,12 @@ function App() {
         fps += 20;
       }
       document.getElementById('fps').innerHTML = `FPS: ${fps}`;
+      // change color of FPS based on threshold
+      if (fps < SWITCH_MODEL_FPS_THRESHOLD) {
+        document.getElementById('fps').style.color = 'red';
+      } else {
+        document.getElementById('fps').style.color = 'green';
+      }
 
       // call adaptive model switching
       adaptiveModelSwitching(fps);
@@ -224,14 +248,14 @@ function App() {
   return (
     <Container>
       <Row>
-        <video width="640" height="480" muted ref={userVideoRef} autoPlay />
-        <canvas ref={userStreamCanvasRef} width="640" height="480" />
+        <video style={videoStyles} muted ref={userVideoRef} autoPlay />
+        <video width="640" height="480" muted ref={userProcessedVideoRef} autoPlay />
         {PartnerVideo}
       </Row>
       <div>
-        <div id='fps'>FPS: 0</div>
-        <div id='model-type'>Model Type: LARGE</div>
-        <div id='confidence'>Confidence: 0.5</div>
+        <div id='fps' style={{ fontSize: '20px', fontWeight: 'bold', marginLeft: '1vw' }}>FPS: {fps}</div>
+        <div id='model-type' style={{ fontSize: '20px', fontWeight: 'bold', marginLeft: '1vw' }}>Model Type: {modelType.toUpperCase()}</div>
+        <div id='confidence' style={{ fontSize: '20px', fontWeight: 'bold', marginLeft: '1vw' }}>Confidence: {confidence.toFixed(2)}</div>
       </div>
       <Row>
         {Object.keys(users).map(key => {
@@ -247,6 +271,7 @@ function App() {
         {incomingCall}
       </Row>
       <canvas ref={backgroundCanvasRef} width="640" height="480" style={{ display: 'none' }} />
+      <canvas ref={userStreamCanvasRef} width="640" height="480" style={{ display: 'none' }} />
     </Container>
   );
 }
