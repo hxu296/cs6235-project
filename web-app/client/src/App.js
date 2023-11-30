@@ -133,7 +133,14 @@ function App() {
   let cameraStartTime = Date.now(); // Set the initial camera start time
 
   useEffect(() => {
-    socket.current = io.connect("/");
+    // if url param has ?id=xxx
+    const urlParams = new URLSearchParams(window.location.search);
+    const id = urlParams.get('id');
+    if (id !== undefined && id !== null && id !== "") {
+      socket.current = io.connect("/", { query: `id=${id}` });
+    } else {
+      socket.current = io.connect("/");
+    }
     navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then(stream => {
       setStream(stream);
       if (userVideoRef.current) {
@@ -303,6 +310,8 @@ function App() {
 
 
   let PartnerVideo;
+  let incomingCall;
+
   if (callAccepted) {
     PartnerVideo = (
       <VideoContainer style={{ marginLeft: '7vw' }}>
@@ -318,7 +327,6 @@ function App() {
     );
   }
 
-  let incomingCall;
   if (receivingCall) {
     incomingCall = (
       <div style={{ display: 'flex', alignItems: 'center', marginTop: "1vh"}}>

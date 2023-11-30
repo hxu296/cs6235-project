@@ -7,14 +7,19 @@ const io = socket(server);
 
 const users = {};
 
-io.on('connection', socket => {
-    if (!users[socket.id]) {
-        users[socket.id] = socket.id;
+io.on('connection', (socket)=> {
+    // try to retrieve id from query string
+    let id = socket.handshake.query.id;
+    if (id) {
+        users[id] = id;
+    } else {
+        id = socket.id;
+        users[id] = id;
     }
-    socket.emit("yourID", socket.id);
+    socket.emit("yourID", id);
     io.sockets.emit("allUsers", users);
     socket.on('disconnect', () => {
-        delete users[socket.id];
+        delete users[id];
     })
 
     socket.on("callUser", (data) => {
