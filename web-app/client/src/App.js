@@ -19,7 +19,7 @@ const Row = styled.div`
   width: 100%;
 `;
 
-const videoStyles = {
+const hiddenVideo = {
   position: "fixed",
   top: 0,
   left: 0,
@@ -29,6 +29,80 @@ const videoStyles = {
   PointerEvents: 'none',
   visibility: 'hidden',
 };
+
+
+const StyledButton = styled.button`
+  display: inline-block;
+  background-color: ${props => props.accept ? '#008000' : '#007BFF'};
+  color: white;
+  border: none;
+  border-radius: 5px;
+  padding: 10px 20px;
+  cursor: pointer;
+  outline: none;
+  transition: background-color 0.3s;
+  &:hover {
+    background-color: ${props => props.accept ? '#006400' : '#0056b3'};
+  }
+`;
+
+const VideoContainer = styled.div`
+  position: relative;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border: 2px solid #ddd;
+  margin-bottom: 20px;
+  margin-left: 1vw;
+  margin-right: 1vw;
+`;
+
+const VideoLabel = styled.div`
+  background: rgba(0, 0, 0, 0.7);
+  color: #fff;
+  padding: 5px 10px;
+  border-radius: 5px;
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2;
+`;
+
+const videoStyle = {
+  width: '640px',
+  height: '480px',
+  backgroundColor: 'black',
+};
+
+const informationCardStyle = {
+  marginLeft: '1vw',
+  marginTop: '3vh',
+  width: '28vw',
+  height: '15vh',
+  backgroundColor: '#f2f2f2',
+  borderRadius: '5px',
+  boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+  border: '2px solid #ddd',
+  display: 'flex',
+  flexDirection: 'column',
+  justifyContent: 'center',
+  alignItems: 'flex-start',
+  padding: '10px',
+  zIndex: 2,
+};
+
+const VideoPlaceholder = styled.div`
+  width: 640px;
+  height: 480px;
+  background-color: #eee;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #333;
+  font-size: 24px;
+  border: 2px solid #ddd;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+`;
+
 
 function App() {
   const [yourID, setYourID] = useState("");
@@ -161,7 +235,7 @@ function App() {
     const peer = new Peer({
       initiator: true,
       trickle: false,
-      stream: stream,
+      stream: processedStream,
       config: { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] },
     });
 
@@ -187,7 +261,7 @@ function App() {
     const peer = new Peer({
       initiator: false,
       trickle: false,
-      stream: stream,
+      stream: processedStream,
       config: { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] },
     });
     peer.on("signal", data => {
@@ -231,7 +305,16 @@ function App() {
   let PartnerVideo;
   if (callAccepted) {
     PartnerVideo = (
-      <video playsInline ref={partnerVideo} autoPlay />
+      <VideoContainer style={{ marginLeft: '7vw' }}>
+        <VideoLabel>Peer's Video</VideoLabel>
+        <video style={videoStyle} playsInline ref={partnerVideo} autoPlay />
+      </VideoContainer>
+    );
+  } else {
+    PartnerVideo = (
+      <VideoPlaceholder style={{ marginLeft: '7vw' }}>
+        Awaiting Connection...
+      </VideoPlaceholder>
     );
   }
 
@@ -239,8 +322,10 @@ function App() {
   if (receivingCall) {
     incomingCall = (
       <div>
-        <h1>{caller} is calling you</h1>
-        <button onClick={acceptCall}>Accept</button>
+        <p>{caller} is calling you</p>
+        <StyledButton accept onClick={acceptCall}>
+          Accept
+        </StyledButton>
       </div>
     )
   }
@@ -248,29 +333,35 @@ function App() {
   return (
     <Container>
       <Row>
-        <video style={videoStyles} muted ref={userVideoRef} autoPlay />
-        <video width="640" height="480" muted ref={userProcessedVideoRef} autoPlay />
+        <video style={hiddenVideo} muted ref={userVideoRef} autoPlay />
+        <VideoContainer>
+          <VideoLabel>Your Video</VideoLabel>
+          <video style={videoStyle} muted ref={userProcessedVideoRef} autoPlay />
+        </VideoContainer>
         {PartnerVideo}
       </Row>
-      <div>
-        <div id='fps' style={{ fontSize: '20px', fontWeight: 'bold', marginLeft: '1vw' }}>FPS: {fps}</div>
-        <div id='model-type' style={{ fontSize: '20px', fontWeight: 'bold', marginLeft: '1vw' }}>Model Type: {modelType.toUpperCase()}</div>
-        <div id='confidence' style={{ fontSize: '20px', fontWeight: 'bold', marginLeft: '1vw' }}>Confidence: {confidence.toFixed(2)}</div>
-      </div>
       <Row>
         {Object.keys(users).map(key => {
           if (key === yourID) {
             return null;
           }
           return (
-            <button onClick={() => callPeer(key)}>Call {key}</button>
+            <StyledButton key={key} onClick={() => callPeer(key)} style={{ marginLeft: '1vw' }}>
+              Call {key}
+            </StyledButton>
           );
         })}
       </Row>
       <Row>
         {incomingCall}
       </Row>
-      <canvas ref={backgroundCanvasRef} width="640" height="480" style={{ display: 'none' }} />
+      <div style={informationCardStyle}>
+        <div style={{ fontSize: '20px', fontWeight: 'bold', marginLeft: '1vw' }}>Your ID: {yourID}</div>
+        <div id='fps' style={{ fontSize: '20px', fontWeight: 'bold', marginLeft: '1vw' }}>FPS: {fps}</div>
+        <div id='model-type' style={{ fontSize: '20px', fontWeight: 'bold', marginLeft: '1vw' }}>Model Type: {modelType.toUpperCase()}</div>
+        <div id='confidence' style={{ fontSize: '20px', fontWeight: 'bold', marginLeft: '1vw' }}>Confidence: {confidence.toFixed(2)}</div>
+      </div>
+      <canvas ref={backgroundCanvasRef} width="700" height="480" style={{ display: 'none' }} />
       <canvas ref={userStreamCanvasRef} width="640" height="480" style={{ display: 'none' }} />
     </Container>
   );
