@@ -75,7 +75,7 @@ const videoStyle = {
 
 const informationCardStyle = {
   marginLeft: '1vw',
-  marginTop: '3vh',
+  marginTop: '2vh',
   width: '28vw',
   height: '15vh',
   backgroundColor: '#f2f2f2',
@@ -179,7 +179,7 @@ function App() {
       fps = Math.round((frameCount * 1000) / duration);
       if(modelType === 'small' ) {
         // DEBUG ONLY: artificially increase FPS for small model
-        fps += 20;
+        fps += 10;
       }
       document.getElementById('fps').innerHTML = `FPS: ${fps}`;
       // change color of FPS based on threshold
@@ -321,10 +321,12 @@ function App() {
   let incomingCall;
   if (receivingCall) {
     incomingCall = (
-      <div>
-        <p>{caller} is calling you</p>
-        <StyledButton accept onClick={acceptCall}>
-          Accept
+      <div style={{ display: 'flex', alignItems: 'center', marginTop: "1vh"}}>
+        <p style={{ marginLeft: '1vw' }}>User</p>
+        <p style={{ fontWeight: 'bold', fontFamily: 'monospace', marginLeft: '10px', marginRight: '10px' }}>{caller}</p>
+        <p>is calling you</p>
+        <StyledButton accept onClick={acceptCall} style={{ marginLeft: '1vw' }}>
+          Accept Call
         </StyledButton>
       </div>
     )
