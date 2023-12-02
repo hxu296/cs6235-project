@@ -1,5 +1,5 @@
 import Camera from '@paddlejs-mediapipe/camera';
-import * as inferenceEngine from './inference-core/index_gpu';
+import * as inferenceEngine from './inference_engine/index_gpu';
 
 
 // Constants
@@ -79,7 +79,6 @@ async function onCameraFrame() {
     } else {
         videoCanvasCtx.drawImage(video, 0, 0, video.width, video.height);
         inferenceEngine.drawHumanSeg(videoCanvas, demoCanvas, backgroundCanvas);
-        console.log('Running human segmentation.');
     }
 
     updateFPS();

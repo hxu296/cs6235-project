@@ -68,7 +68,7 @@
       "include": [
         "packages/**/*.ts",
         "./index.ts",
-        "inference-core/"
+        "inference_engine/"
       ],
       "exclude": [
         "node_modules/",
