@@ -13,17 +13,14 @@
     "simple-peer": "9.6.2",
     "socket.io-client": "^2.3.0",
     "styled-components": "^5.0.1",
-    "@paddlejs-mediapipe/camera": "0.0.2",
-    "@paddlejs-models/humanseg": "^1.2.3"
+    "@buzzstream/humanseg": "file:../../inference-engine/buzzstream-humanseg-0.0.1.tgz",
+    "@paddlejs-mediapipe/camera": "^0.0.4"
   },
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
-  },
-  "eslintConfig": {
-    "extends": "react-app"
   },
   "browserslist": {
     "production": [

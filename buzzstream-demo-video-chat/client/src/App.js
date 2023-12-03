@@ -4,7 +4,7 @@ import io from "socket.io-client";
 import Peer from "simple-peer";
 import styled from "styled-components";
 import Camera from '@paddlejs-mediapipe/camera';
-import * as humanseg from '@paddlejs-models/humanseg/lib/index_gpu';
+import * as humanseg from '@buzzstream/humanseg/lib/index_gpu';
 import backgroundImage from './gt.jpeg';
 
 const Container = styled.div`
@@ -120,6 +120,7 @@ function App() {
   const socket = useRef();
   const camera = useRef();
   const userProcessedVideoRef = useRef();
+  const [modelLoaded, setModelLoaded] = useState(false);
 
   // Function to switch models based on FPS
   let lastFrameTime = Date.now(); // Time of the last frame for FPS calculation
@@ -160,7 +161,8 @@ function App() {
       setCallerSignal(data.signal);
     })
     humanseg.load().then(() => {
-      console.log('humanseg model loaded');
+      setModelLoaded(true);
+      console.log('model loaded');
     });
   }, []);
 
@@ -284,7 +286,7 @@ function App() {
   }
 
   // Use a canvas to stream the processed video
-  if (stream) {
+  if (stream && modelLoaded) {
     // Initialize camera using Paddle.js and assign backgroundCanvas for the human segmentation
     // Set up the background image for segmentation
     const ctx = backgroundCanvasRef.current.getContext('2d');

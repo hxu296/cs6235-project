@@ -3,6 +3,7 @@ const path = require('path');
 module.exports = {
     mode: 'production',
     entry: {
+        index: [path.resolve(__dirname, './src/index')],
         index_gpu: [path.resolve(__dirname, './src/index_gpu')]
     },
     resolve: {
@@ -22,7 +23,7 @@ module.exports = {
         filename: '[name].js',
         path: path.resolve(__dirname, 'lib'),
         libraryTarget: 'umd',
-        library: ['paddlejs', 'humanseg'],
+        library: ['buzzstream', 'humanseg'],
         globalObject: 'this',
         publicPath: '/'
     }
