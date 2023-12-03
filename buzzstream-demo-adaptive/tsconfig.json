@@ -68,7 +68,8 @@
       "include": [
         "packages/**/*.ts",
         "./index.ts",
-        "inference_engine/"
+        "inference_engine/",
+        "./images.d.ts",
       ],
       "exclude": [
         "node_modules/",

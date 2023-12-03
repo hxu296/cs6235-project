@@ -1,5 +1,6 @@
 import Camera from '@paddlejs-mediapipe/camera';
 import * as inferenceEngine from './inference_engine/index_gpu';
+import bgImageSrc from './bgImg/gt.jpeg';
 import './styles.css';
 
 // Constants
@@ -25,7 +26,7 @@ backgroundCanvas.width = backCanvas.width;
 backgroundCanvas.height = backCanvas.height;
 
 const image = new Image();
-image.src = './bgImgs/gt.jpeg';
+image.src = bgImageSrc;
 image.onload = () => {
     const ctx = backgroundCanvas.getContext('2d');
     ctx.drawImage(image, 0, 0, backgroundCanvas.width, backgroundCanvas.height);
