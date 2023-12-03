@@ -129,7 +129,7 @@ function App() {
   let fps = 0; // Initial FPS
   let confidence = 0.5; // Initial confidence
   let stepSize = 0.02; // Initial step size
-  const SWITCH_MODEL_FPS_THRESHOLD = 30; // FPS threshold to switch to a smaller model
+  const SWITCH_MODEL_FPS_THRESHOLD = 20; // FPS threshold to switch to a smaller model
   const GRACE_PERIOD_MS = 7000; // Grace period in milliseconds to not switch models too frequently
   let cameraStartTime = Date.now(); // Set the initial camera start time
 
@@ -179,17 +179,13 @@ function App() {
   }, [userStreamCanvasRef]);
 
   // Update FPS and handle model switching
-  const updateFPS = () => {
+  const updateFPS = async () => {
     frameCount++;
     const now = Date.now();
     const duration = now - lastFrameTime;
 
     if (duration > 1000) {
       fps = Math.round((frameCount * 1000) / duration);
-      if(modelType === 'small' ) {
-        // DEBUG ONLY: artificially increase FPS for small model
-        fps += 10;
-      }
       document.getElementById('fps').innerHTML = `FPS: ${fps}`;
       // change color of FPS based on threshold
       if (fps < SWITCH_MODEL_FPS_THRESHOLD) {
@@ -199,14 +195,14 @@ function App() {
       }
 
       // call adaptive model switching
-      adaptiveModelSwitching(fps);
+      await adaptiveModelSwitching(fps);
 
       frameCount = 0;
       lastFrameTime = now;
     }
   };
 
-  const adaptiveModelSwitching = (currentFps) => {
+  const adaptiveModelSwitching = async (currentFps) => {
     const timeSinceStart = Date.now() - cameraStartTime;
 
     if (timeSinceStart > GRACE_PERIOD_MS) {
@@ -222,21 +218,29 @@ function App() {
     }
 
     if (modelType !== 'small' && confidence < 0.5) {
-      switchToModel('small');
+      await switchToModel('small');
     }
 
     if (modelType !== 'large' && confidence > 0.8) {
-      switchToModel('large');
+      await switchToModel('large');
     }
   };
 
-  const switchToModel = (size) => {
+  const switchToModel = async (size) => {
     // Artificially adjust the model type (this might involve re-loading models etc.)
+    // pause the camera
+    camera.current.pause();
+    // change the model type
+    await humanseg.swapModel({
+      needPreheat: true,
+      modelType: size,
+    });
+    cameraStartTime = Date.now(); // reset the camera start time
+    // resume the camera
+    camera.current.start();
+    // update the model type on the information card and internal state
     modelType = size;
     document.getElementById('model-type').innerHTML = `Model Type: ${modelType.toUpperCase()}`;
-    // In a real scenario, you would need to replace the model loading logic
-    // to suit your application's architecture, possibly involving state updates
-    // and clean-up of existing resources
   };
 
 
@@ -299,10 +303,14 @@ function App() {
 
     camera.current = new Camera(userVideoRef.current, {
       onFrame: async () => {
-        if (backgroundCanvasRef.current && userStreamCanvasRef.current) {
-          humanseg.drawHumanSeg(userVideoRef.current, userStreamCanvasRef.current, backgroundCanvasRef.current);
+        if(camera.current.video.paused){
+          // draw the background image if the video is paused
+          ctx.drawImage(image, 0, 0, backgroundCanvasRef.current.width, backgroundCanvasRef.current.height);
         }
-        updateFPS();
+        if (backgroundCanvasRef.current && userStreamCanvasRef.current) {
+          await humanseg.drawHumanSeg(userVideoRef.current, userStreamCanvasRef.current, backgroundCanvasRef.current);
+        }
+        await updateFPS();
         //console.log('drawing human seg');
       },
     });
