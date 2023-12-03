@@ -1,6 +1,6 @@
 import Camera from '@paddlejs-mediapipe/camera';
 import * as inferenceEngine from './inference_engine/index_gpu';
-
+import './styles.css';
 
 // Constants
 const GRACE_PERIOD_MS = 7000; // Grace period in milliseconds to not switch models too frequently
