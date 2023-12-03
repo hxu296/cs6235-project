@@ -1,6 +1,8 @@
-# Real-time Live Stream with ML inference
+# Real-time Live Stream with Adaptive ML inference
 
 This project is a demo of a real-time live stream with ML inference. It is built on top of paddle.js and WebRTC. It is a part of the final project for CS6235 at Georgia Tech.
+
+First off, for course staff, please find our final report and presentation in [this directory](./final-report-materials).
 
 ## Getting Started
 We have two demos, one for adaptive model switching and one for video chat. To setup and run the demo, go to the corresponding directory and follow the instructions in the README.md file.
