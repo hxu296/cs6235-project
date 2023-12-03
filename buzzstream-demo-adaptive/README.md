@@ -8,5 +8,6 @@ To setup and run the demo, make sure you have `npm` installed. Then, run the fol
 npm install
 npm run dev
 ```
+Then, go to `localhost:8866` in your browser.
 
 ## Demo
