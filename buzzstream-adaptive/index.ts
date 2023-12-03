@@ -9,7 +9,7 @@ const SWITCH_MODEL_FPS_THRESHOLD = 40; // FPS threshold to switch to a smaller m
 // Extract URL parameters
 const queryParams = new URLSearchParams(window.location.search);
 const autostart = queryParams.get('autostart');
-const modelType = queryParams.get('model') || 'large';
+let modelType = queryParams.get('model') || 'large';
 
 // Elements
 const loadingDom = document.getElementById('isLoading');
@@ -45,7 +45,7 @@ let camera = null;
 
 // confidence for model switching
 let confidence = parseFloat(queryParams.get('confidence')) || 0.5;
-let step_size = parseFloat(queryParams.get('step-size')) || 0.02;
+let step_size = parseFloat(queryParams.get('step-size')) || 0.05;
 
 /**
  * Initializes the camera and attaches the onFrame callback
@@ -76,16 +76,16 @@ async function onCameraFrame() {
     if (video.paused) {
         demoCanvas.getContext('2d').drawImage(videoCanvas, 0, 0, videoCanvas.width, videoCanvas.height);
         console.log('Video is paused.');
-    } else {
+    } 
+    else {
         videoCanvasCtx.drawImage(video, 0, 0, video.width, video.height);
         inferenceEngine.drawHumanSeg(videoCanvas, demoCanvas, backgroundCanvas);
     }
-
-    updateFPS();
+    await updateFPS();
 }
 
 // Handle low FPS and model switching only after grace period
-function adaptiveModelSwitching(fps) {
+async function adaptiveModelSwitching(fps) {
     // handle low FPS and model switching only after grace period
     if (cameraStartTime > 0 &&
         (Date.now() - cameraStartTime) > GRACE_PERIOD_MS && 
@@ -100,11 +100,11 @@ function adaptiveModelSwitching(fps) {
         confidence = Math.min(confidence, 1);
     }
     if (modelType !== 'small' && confidence < 0.5) {
-        switchToModel('small');
+        await switchToModel('small');
     }
     // if confidence is high, switch to large model
     if (modelType !== 'large' && confidence > 0.8) {
-        switchToModel('large');
+        await switchToModel('large');
     }
     // update confidence DOM
     confidenceDom.innerHTML = "Confidence: " + confidence.toFixed(2);
@@ -113,7 +113,7 @@ function adaptiveModelSwitching(fps) {
 /**
  * Monitors and updates FPS in the DOM
  */
-function updateFPS() {
+async function updateFPS() {
     const fpsDisplay = document.getElementById('fps');
     if (video.paused) {
         fpsDisplay.innerHTML = "FPS: 0";
@@ -137,7 +137,7 @@ function updateFPS() {
         }
         
         // Check for FPS and model switching after grace period
-        adaptiveModelSwitching(fps);
+        await adaptiveModelSwitching(fps);
 
         frameCount = 0;
         lastFrameTime = now;
@@ -148,14 +148,18 @@ function updateFPS() {
  * Function that switches to a different model size
  * @param {string} size - The model size to switch to.
  */
-function switchToModel(size) {
+async function switchToModel(size) {
     // Implementation of model switching logic
-    // Update the URL parameter and reload the camera
-    queryParams.set('model', size);
-    queryParams.set('autostart', 'true');
-    queryParams.set('confidence', confidence.toFixed(1).toString());
-    queryParams.set('step-size', step_size.toString());
-    window.location.search = queryParams.toString();
+    camera.pause(); // pause the camera when switching models
+    await inferenceEngine.swapModel({
+        needPreheat: true,
+        modelType: size,
+    });
+    // model switching is done!
+    cameraStartTime = Date.now(); // restart grace period counter
+    modelTypeDom.innerHTML = "Model Type: " + size.toUpperCase(); // update model type DOM
+    modelType = size; // update internal model type state
+    camera.start(); // restart the camera
 }
 
 /**

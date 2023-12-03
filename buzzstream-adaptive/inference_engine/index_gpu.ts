@@ -4,6 +4,7 @@
  * // 2) Preheat models
  * // 3) Run inference on input image
  * // 4) Draw inference results on canvas
+ * // 5) Hot-swap models
  */
 
 import { Runner, env, registerOp } from '@paddlejs/paddlejs-core';
@@ -48,12 +49,34 @@ function createWebglContext(canvas: HTMLCanvasElement) {
     return gl as WebGLRenderingContext;
 }
 
-const renderCanvas = document.createElement('canvas');
+let renderCanvas = document.createElement('canvas');
 renderCanvas.width = 500;
 renderCanvas.height = 280;
-const gl = createWebglContext(renderCanvas);
+let gl = createWebglContext(renderCanvas);
 
 let segImgOp = null;
+
+
+export async function swapModel(options: LoadOptions = {
+    needPreheat: true,
+    modelType: 'large',
+    canvasWidth: 500,
+    canvasHeight: 280
+}) {
+    // tear down the previous runner
+    runner.stopPredict();
+    runner = null;
+    segImgOp = null;
+    // remove the previous canvas
+    renderCanvas.remove();
+    // create a new canvas
+    renderCanvas = document.createElement('canvas');
+    renderCanvas.width = 500;
+    renderCanvas.height = 280;
+    gl = createWebglContext(renderCanvas);
+    // load the new model
+    await load(options);
+}
 
 export async function load(options: LoadOptions = {
     needPreheat: true,
